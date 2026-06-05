@@ -38,7 +38,7 @@ async def test_media_repository_query_success():
         workspace_id=1,
         user_email="test@example.com",
         mime_type="image/png",
-        model="gemini-3.1-flash-image-preview",
+        model="gemini-3.1-flash-image",
         aspect_ratio="1:1",
         status="completed",
         created_at=datetime.now(),

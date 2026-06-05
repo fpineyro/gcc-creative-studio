@@ -219,7 +219,7 @@ async def test_generate_image(service):
     request = MagicMock()
     request.workspace_id = 1
     request.inputs.prompt = "A cat"
-    request.config.model = "gemini-3.1-flash-image-preview"
+    request.config.model = "gemini-3.1-flash-image"
     request.config.aspect_ratio = "1:1"
     request.config.brand_guidelines = False
 
@@ -242,7 +242,7 @@ async def test_edit_image(service):
     request.workspace_id = 1
     request.inputs.prompt = "Add hat"
     request.inputs.input_images = [123]
-    request.config.model = "gemini-3.1-flash-image-preview"
+    request.config.model = "gemini-3.1-flash-image"
     request.config.aspect_ratio = "1:1"
     request.config.brand_guidelines = False
 
