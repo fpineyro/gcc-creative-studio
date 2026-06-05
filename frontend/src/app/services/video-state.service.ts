@@ -15,9 +15,11 @@
  */
 
 import {Injectable} from '@angular/core';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 
-export interface VideoState {
+import {SettingsService} from './settings.service';
+
+interface VideoState {
   prompt: string;
   aspectRatio: string;
   model: string;
@@ -38,25 +40,33 @@ export interface VideoState {
   providedIn: 'root',
 })
 export class VideoStateService {
-  private initialState: VideoState = {
-    prompt: '',
-    aspectRatio: '16:9',
-    model: 'gemini-omni-flash-preview',
-    style: null,
-    colorAndTone: null,
-    lighting: null,
-    numberOfMedia: 4,
-    durationSeconds: 8,
-    composition: null,
-    generateAudio: true,
-    negativePrompt: '',
-    useBrandGuidelines: false,
-    enhancePrompt: false,
-    mode: 'Text to Video',
-  };
+  private initialState: VideoState;
+  private state: BehaviorSubject<VideoState>;
+  state$: Observable<VideoState>;
 
-  private state = new BehaviorSubject<VideoState>(this.initialState);
-  state$ = this.state.asObservable();
+  constructor(private settingsService: SettingsService) {
+    const showOmni = this.settingsService.getShowGeminiOmni();
+
+    this.initialState = {
+      prompt: '',
+      aspectRatio: '16:9',
+      model: showOmni ? 'gemini-omni-generate-preview' : 'veo-3.1-generate-001',
+      style: null,
+      colorAndTone: null,
+      lighting: null,
+      numberOfMedia: 4,
+      durationSeconds: 8,
+      composition: null,
+      generateAudio: true,
+      negativePrompt: '',
+      useBrandGuidelines: false,
+      enhancePrompt: false,
+      mode: 'Text to Video',
+    };
+
+    this.state = new BehaviorSubject<VideoState>(this.initialState);
+    this.state$ = this.state.asObservable();
+  }
 
   updateState(newState: Partial<VideoState>) {
     this.state.next({...this.state.value, ...newState});

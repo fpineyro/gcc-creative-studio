@@ -32,6 +32,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {AuthService} from '../../common/services/auth.service';
 import {handleInfoSnackbar} from '../../utils/handleMessageSnackbar';
 import {JobStatus} from '../../common/models/media-item.model';
+import {SettingsService} from '../../services/settings.service';
 
 import {
   AdminDashboardService,
@@ -63,6 +64,7 @@ export class AdminHomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private monthlyUsersChartContainer!: ElementRef;
 
   isCleared = false;
+  showGeminiOmni = false;
   startDate = '';
   endDate = '';
   startCalendarDate: Date | null = null;
@@ -82,6 +84,7 @@ export class AdminHomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private adminService: AdminDashboardService,
     private snackBar: MatSnackBar,
+    private settingsService: SettingsService,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isSuperAdmin$ = of(this.authService.isUserAdmin());
@@ -112,6 +115,30 @@ export class AdminHomeComponent implements OnInit, AfterViewInit, OnDestroy {
         );
       }
     });
+
+    this.showGeminiOmni = this.settingsService.getShowGeminiOmni();
+  }
+
+  toggleGeminiOmni(event: any): void {
+    this.showGeminiOmni = event.checked;
+    this.settingsService
+      .updateSetting('show_gemini_omni', this.showGeminiOmni ? 'true' : 'false')
+      .subscribe({
+        next: () => {
+          handleInfoSnackbar(
+            this.snackBar,
+            `Gemini Omni model visibility is now ${this.showGeminiOmni ? 'enabled' : 'disabled'}.`,
+          );
+        },
+        error: err => {
+          console.error('Failed to update system setting:', err);
+          this.showGeminiOmni = !this.showGeminiOmni;
+          handleInfoSnackbar(
+            this.snackBar,
+            'Failed to update Gemini Omni visibility setting.',
+          );
+        },
+      });
   }
 
   loadAllStats(startDate?: string, endDate?: string): void {

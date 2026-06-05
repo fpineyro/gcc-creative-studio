@@ -64,6 +64,7 @@ import {
 import {VideoStateService} from '../services/video-state.service';
 import {WorkspaceStateService} from '../services/workspace/workspace-state.service';
 import {GalleryService} from '../gallery/gallery.service';
+import {SettingsService} from '../services/settings.service';
 import {
   handleErrorSnackbar,
   handleInfoSnackbar,
@@ -139,11 +140,9 @@ export class VideoComponent implements OnInit, AfterViewInit {
   private pendingRemixState: any = null;
   private pendingSourceAssets: EnrichedSourceAsset[] | null = null;
 
-  // --- Search Request Object ---
-  // This object holds the current state of all user selections.
   searchRequest: VeoRequest = {
     prompt: '',
-    generationModel: 'gemini-omni-flash-preview',
+    generationModel: 'veo-3.1-generate-001',
     aspectRatio: '16:9',
     numberOfMedia: 4,
     style: null,
@@ -162,12 +161,8 @@ export class VideoComponent implements OnInit, AfterViewInit {
   negativePhrases: string[] = [];
 
   // --- Dropdown Options ---
-  generationModels: GenerationModelConfig[] = MODEL_CONFIGS.filter(
-    m => m.type === 'VIDEO',
-  );
-  selectedGenerationModel =
-    this.generationModels.find(m => m.value === 'gemini-omni-flash-preview')
-      ?.viewValue || this.generationModels[0].viewValue;
+  generationModels: GenerationModelConfig[] = [];
+  selectedGenerationModel = '';
   aspectRatioOptions: {value: string; viewValue: string; disabled: boolean}[] =
     [
       {value: '16:9', viewValue: '16:9 \n Horizontal', disabled: false},
@@ -234,10 +229,22 @@ export class VideoComponent implements OnInit, AfterViewInit {
     private workspaceStateService: WorkspaceStateService,
     private sourceAssetService: SourceAssetService,
     private videoStateService: VideoStateService,
+    private settingsService: SettingsService,
     @Inject(GalleryService)
     private galleryService: GalleryService,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {
+    const showOmni = this.settingsService.getShowGeminiOmni();
+    this.generationModels = MODEL_CONFIGS.filter(
+      m => m.type === 'VIDEO' && (m.value !== 'gemini-omni-generate-preview' || showOmni),
+    );
+    this.searchRequest.generationModel = showOmni
+      ? 'gemini-omni-generate-preview'
+      : 'veo-3.1-generate-001';
+    this.selectedGenerationModel =
+      this.generationModels.find(m => m.value === 'gemini-omni-generate-preview')?.viewValue ||
+      this.generationModels[0].viewValue;
+
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.activeVideoJob$ = this.service.activeVideoJob$.pipe(
       map(job =>
@@ -650,7 +657,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
       !this.isConcatenateMode
     ) {
       const omniModel = this.generationModels.find(
-        m => m.value === 'gemini-omni-flash-preview',
+        m => m.value === 'gemini-omni-generate-preview',
       );
       if (omniModel) {
         this.selectModel(omniModel);
@@ -659,6 +666,18 @@ export class VideoComponent implements OnInit, AfterViewInit {
           "Veo 3 doesn't support images as input, so we've switched to Gemini Omni for you.",
         );
         return;
+      } else {
+        const veo31Model = this.generationModels.find(
+          m => m.value === 'veo-3.1-generate-001',
+        );
+        if (veo31Model) {
+          this.selectModel(veo31Model);
+          handleSuccessSnackbar(
+            this._snackBar,
+            "Veo 3.0 doesn't support images as input, so we've switched to Veo 3.1 for you.",
+          );
+          return;
+        }
       }
     }
 
@@ -934,7 +953,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
 
       if (isVeo30) {
         const omniModel = this.generationModels.find(
-          m => m.value === 'gemini-omni-flash-preview',
+          m => m.value === 'gemini-omni-generate-preview',
         );
         if (omniModel) {
           this.selectModel(omniModel);
@@ -942,6 +961,17 @@ export class VideoComponent implements OnInit, AfterViewInit {
             this._snackBar,
             "Veo 3.0 doesn't support video as input, so we've switched to Gemini Omni for you.",
           );
+        } else {
+          const veo31Model = this.generationModels.find(
+            m => m.value === 'veo-3.1-generate-001',
+          );
+          if (veo31Model) {
+            this.selectModel(veo31Model);
+            handleSuccessSnackbar(
+              this._snackBar,
+              "Veo 3.0 doesn't support video as input, so we've switched to Veo 3.1 for you.",
+            );
+          }
         }
       }
     }
@@ -1394,9 +1424,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
     this.currentMode = 'Ingredients to Video';
     this.selectedMode.set('Ingredients to Video');
 
-    const omniModel = this.generationModels.find(
-      m => m.value === 'gemini-omni-flash-preview',
-    );
+    const omniModel = this.generationModels.find(m => m.value === 'gemini-omni-generate-preview');
     if (omniModel) {
       this.selectModel(omniModel);
     }
@@ -1542,14 +1570,30 @@ export class VideoComponent implements OnInit, AfterViewInit {
   private handleOmniModelSwitch(): void {
     if (this.referenceVideo || this.referenceAudio) {
       const omniModel = this.generationModels.find(
-        m => m.value === 'gemini-omni-flash-preview',
+        m => m.value === 'gemini-omni-generate-preview',
       );
-      if (omniModel && this.searchRequest.generationModel !== omniModel.value) {
-        this.selectModel(omniModel);
-        handleSuccessSnackbar(
-          this._snackBar,
-          "We've switched to the Gemini Omni model, as this one supports video and audio references.",
+      if (omniModel) {
+        if (this.searchRequest.generationModel !== omniModel.value) {
+          this.selectModel(omniModel);
+          handleSuccessSnackbar(
+            this._snackBar,
+            "We've switched to the Gemini Omni model, as this one supports video and audio references.",
+          );
+        }
+      } else {
+        const veo31Model = this.generationModels.find(
+          m => m.value === 'veo-3.1-generate-001',
         );
+        if (
+          veo31Model &&
+          this.searchRequest.generationModel !== veo31Model.value
+        ) {
+          this.selectModel(veo31Model);
+          handleSuccessSnackbar(
+            this._snackBar,
+            "We've switched to the Veo 3.1 model, as this one supports reference inputs.",
+          );
+        }
       }
     }
   }
@@ -1653,14 +1697,30 @@ export class VideoComponent implements OnInit, AfterViewInit {
       }
 
       const omniModel = this.generationModels.find(
-        m => m.value === 'gemini-omni-flash-preview',
+        m => m.value === 'gemini-omni-generate-preview',
       );
-      if (omniModel && this.searchRequest.generationModel !== omniModel.value) {
-        this.selectModel(omniModel);
-        handleSuccessSnackbar(
-          this._snackBar,
-          "We've switched to the Gemini Omni model for you, as this one supports reference images.",
+      if (omniModel) {
+        if (this.searchRequest.generationModel !== omniModel.value) {
+          this.selectModel(omniModel);
+          handleSuccessSnackbar(
+            this._snackBar,
+            "We've switched to the Gemini Omni model for you, as this one supports reference images.",
+          );
+        }
+      } else {
+        const veo31Model = this.generationModels.find(
+          m => m.value === 'veo-3.1-generate-001',
         );
+        if (
+          veo31Model &&
+          this.searchRequest.generationModel !== veo31Model.value
+        ) {
+          this.selectModel(veo31Model);
+          handleSuccessSnackbar(
+            this._snackBar,
+            "We've switched to the Veo 3.1 model for you, as this one supports reference images.",
+          );
+        }
       }
     }
   }

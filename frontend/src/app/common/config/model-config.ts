@@ -234,7 +234,7 @@ export const MODEL_CONFIGS: GenerationModelConfig[] = [
   },
   // --- Video Models ---
   {
-    value: 'gemini-omni-flash-preview',
+    value: 'gemini-omni-generate-preview',
     viewValue: 'Gemini Omni \n (Multi-Modal Reference)',
     type: 'VIDEO',
     icon: 'layers',

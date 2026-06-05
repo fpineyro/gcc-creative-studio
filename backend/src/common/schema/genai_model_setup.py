@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib.metadata
 import logging
 
 from google.genai import Client
@@ -20,6 +21,12 @@ from google.genai import Client
 from src.config.config_service import config_service
 
 logger = logging.getLogger(__name__)
+
+
+try:
+    VERSION = importlib.metadata.version("creative-studio")
+except importlib.metadata.PackageNotFoundError:
+    VERSION = "0.1.0"
 
 
 class GenAIModelSetup:
@@ -48,6 +55,11 @@ class GenAIModelSetup:
                     project=project_id,
                     location=location,
                     vertexai=config.INIT_VERTEX,
+                    http_options={
+                        "headers": {
+                            "user-agent": f"creative-studio/{VERSION} (+https://github.com/GoogleCloudPlatform/gcc-creative-studio)"
+                        }
+                    },
                 )
             except Exception as e:
                 logger.error("Failed to initialize GenAI client: %s", e)
@@ -75,7 +87,10 @@ class GenAIModelSetup:
                     project=project_id,
                     location="global",
                     http_options={
-                        "base_url": "https://aiplatform.googleapis.com"
+                        "base_url": "https://aiplatform.googleapis.com",
+                        "headers": {
+                            "user-agent": f"creative-studio/{VERSION} (+https://github.com/GoogleCloudPlatform/gcc-creative-studio)"
+                        },
                     },
                 )
             except Exception as e:
