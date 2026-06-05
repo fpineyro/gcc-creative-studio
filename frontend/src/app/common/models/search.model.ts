@@ -133,3 +133,14 @@ export interface GallerySearchDto {
   query?: string;
   tags?: string[];
 }
+
+export interface GalleryFiltersState {
+  query: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  mimeType: string;
+  model: string;
+  itemType: string;
+  tags: string[];
+  onlyMyMedia: boolean;
+}

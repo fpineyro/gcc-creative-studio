@@ -44,7 +44,10 @@ import {DropdownOption} from '../../common/components/studio-dropdown/studio-dro
 import {MODEL_CONFIGS} from '../../common/config/model-config';
 import {JobStatus, MediaItem} from '../../common/models/media-item.model';
 import {GalleryItem} from '../../common/models/gallery-item.model';
-import {GallerySearchDto} from '../../common/models/search.model';
+import {
+  GalleryFiltersState,
+  GallerySearchDto,
+} from '../../common/models/search.model';
 import {UserService} from '../../common/services/user.service';
 import {GalleryService} from '../gallery.service';
 import {WorkspaceStateService} from '../../services/workspace/workspace-state.service';
@@ -256,21 +259,18 @@ export class MediaGalleryComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.mediaTypeFilter = this.filterByType || '';
 
-    // restore last filters
-    const savedFilters = this.galleryService.currentFilters;
-    if (savedFilters) {
-      this.queryFilter = savedFilters.query || savedFilters.userEmail || '';
-      this.startDateFilter = savedFilters.startDate
-        ? new Date(savedFilters.startDate)
-        : null;
-      this.endDateFilter = savedFilters.endDate
-        ? new Date(savedFilters.endDate)
-        : null;
-      this.mediaTypeFilter = savedFilters.mimeType || '';
-      this.generationModelFilter = savedFilters.model || '';
-      this.assetTypeFilter = savedFilters.itemType || '';
-      this.tagsFilter = savedFilters.tags || [];
-      this.onlyMyMedia = savedFilters.userEmail === userDetails?.email;
+    if (!this.isSelectionMode && !this.isSelectorMode) {
+      const savedState = this.galleryService.filtersState;
+      if (savedState) {
+        this.queryFilter = savedState.query;
+        this.startDateFilter = savedState.startDate;
+        this.endDateFilter = savedState.endDate;
+        this.mediaTypeFilter = savedState.mimeType;
+        this.generationModelFilter = savedState.model;
+        this.assetTypeFilter = savedState.itemType;
+        this.tagsFilter = savedState.tags;
+        this.onlyMyMedia = savedState.onlyMyMedia;
+      }
     }
 
     this.searchTerm(); // Initial search with stored filters
@@ -882,6 +882,19 @@ export class MediaGalleryComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (this.tagsFilter.length > 0) {
       filters['tags'] = this.tagsFilter;
+    }
+    if (!this.isSelectionMode && !this.isSelectorMode) {
+      const state: GalleryFiltersState = {
+        query: this.queryFilter,
+        startDate: this.startDateFilter,
+        endDate: this.endDateFilter,
+        mimeType: this.mediaTypeFilter,
+        model: this.generationModelFilter,
+        itemType: this.assetTypeFilter,
+        tags: this.tagsFilter,
+        onlyMyMedia: this.onlyMyMedia,
+      };
+      this.galleryService.setFiltersState(state);
     }
     this.galleryService.setFilters(filters);
   }

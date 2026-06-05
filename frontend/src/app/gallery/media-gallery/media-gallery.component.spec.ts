@@ -45,7 +45,8 @@ describe('MediaGalleryComponent', () => {
             images$: of([]),
             allImagesLoaded: of(true),
             searchTerm: () => {},
-            currentFilters: null,
+            filtersState: null,
+            setFiltersState: () => {},
             setFilters: () => {},
             bulkDelete: () => of({deleted_count: 1}),
             bulkDownload: () => of(new Blob()),
@@ -103,19 +104,19 @@ describe('MediaGalleryComponent', () => {
 
   describe('ngOnInit filters restoration', () => {
     it('should restore filters from GalleryService on init', () => {
-      const mockFilters = {
+      const mockState = {
         query: 'test query',
         mimeType: 'image/*',
         model: 'test-model',
         itemType: 'media_item',
         tags: ['tag1', 'tag2'],
-        userEmail: 'test@google.com',
-        startDate: '2026-01-01T00:00:00.000Z',
-        endDate: '2026-01-02T00:00:00.000Z',
+        onlyMyMedia: true,
+        startDate: new Date('2026-01-01T00:00:00.000Z'),
+        endDate: new Date('2026-01-02T00:00:00.000Z'),
       };
 
       const galleryService = TestBed.inject(GalleryService);
-      (galleryService as any).currentFilters = mockFilters;
+      (galleryService as any).filtersState = mockState;
 
       component.ngOnInit();
 
@@ -133,23 +134,18 @@ describe('MediaGalleryComponent', () => {
       );
     });
 
-    it('should restore userEmail as query when query is missing', () => {
-      const mockFilters = {
-        userEmail: 'test@google.com',
-        limit: 40,
-      };
-
+    it('should use default values when no filtersState is stored', () => {
       const galleryService = TestBed.inject(GalleryService);
-      (galleryService as any).currentFilters = mockFilters;
+      (galleryService as any).filtersState = null;
 
       component.ngOnInit();
 
-      expect(component.queryFilter).toBe('test@google.com');
+      expect(component.queryFilter).toBe('');
       expect(component.mediaTypeFilter).toBe('');
       expect(component.generationModelFilter).toBe('');
       expect(component.assetTypeFilter).toBe('');
       expect(component.tagsFilter).toEqual([]);
-      expect(component.onlyMyMedia).toBeTrue();
+      expect(component.onlyMyMedia).toBeFalse();
       expect(component.startDateFilter).toBeNull();
       expect(component.endDateFilter).toBeNull();
     });
