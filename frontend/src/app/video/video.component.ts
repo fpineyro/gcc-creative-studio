@@ -46,6 +46,8 @@ import {
 import {JobStatus, MediaItem} from '../common/models/media-item.model';
 import {
   ReferenceImage,
+  ReferenceVideo,
+  ReferenceAudio,
   SourceMediaItemLink,
   VeoRequest,
 } from '../common/models/search.model';
@@ -108,18 +110,8 @@ export class VideoComponent implements OnInit, AfterViewInit {
   isExtensionMode = false;
   referenceImages: ReferenceImage[] = [];
   referenceImagesType: 'ASSET' | 'STYLE' = 'ASSET';
-  referenceVideo: {
-    id: number;
-    type: 'source_asset' | 'media_item';
-    previewUrl: string;
-    index?: number;
-  } | null = null;
-  referenceAudio: {
-    id: number;
-    type: 'source_asset' | 'media_item';
-    name: string;
-    index?: number;
-  } | null = null;
+  referenceVideo: ReferenceVideo | null = null;
+  referenceAudio: ReferenceAudio | null = null;
   parentMediaItemId: number | null = null;
   currentMode = 'Text to Video';
   modes = [
@@ -326,6 +318,10 @@ export class VideoComponent implements OnInit, AfterViewInit {
       useBrandGuidelines: this.searchRequest.useBrandGuidelines,
       enhancePrompt: this.searchRequest.enhancePrompt || false,
       mode: this.currentMode,
+      referenceImages: this.referenceImages,
+      referenceImagesType: this.referenceImagesType,
+      referenceVideo: this.referenceVideo,
+      referenceAudio: this.referenceAudio,
     });
   }
 
@@ -346,6 +342,10 @@ export class VideoComponent implements OnInit, AfterViewInit {
     this.searchRequest.useBrandGuidelines = state.useBrandGuidelines;
     this.searchRequest.enhancePrompt = state.enhancePrompt;
     this.currentMode = state.mode || 'Text to Video';
+    this.referenceImages = state.referenceImages || [];
+    this.referenceImagesType = state.referenceImagesType || 'ASSET';
+    this.referenceVideo = state.referenceVideo || null;
+    this.referenceAudio = state.referenceAudio || null;
 
     this.negativePhrases = state.negativePrompt
       ? state.negativePrompt.split(', ').filter(Boolean)
@@ -1506,12 +1506,14 @@ export class VideoComponent implements OnInit, AfterViewInit {
         }
       }
       this.handleOmniModelSwitch();
+      this.saveState();
     });
   }
 
   clearReferenceVideo(event: Event): void {
     event.stopPropagation();
     this.referenceVideo = null;
+    this.saveState();
   }
 
   openAudioSelectorForReference(): void {
@@ -1546,12 +1548,14 @@ export class VideoComponent implements OnInit, AfterViewInit {
         };
       }
       this.handleOmniModelSwitch();
+      this.saveState();
     });
   }
 
   clearReferenceAudio(event: Event): void {
     event.stopPropagation();
     this.referenceAudio = null;
+    this.saveState();
   }
 
   private handleOmniModelSwitch(): void {
@@ -1634,6 +1638,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
         }
       });
       this.handleReferenceImageAdded();
+      this.saveState();
     });
   }
 
@@ -1659,6 +1664,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
             previewUrl: result.presignedUrl || '',
           });
           this.handleReferenceImageAdded();
+          this.saveState();
         }
       });
     }
@@ -1715,6 +1721,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
   clearReferenceImage(index: number, event: MouseEvent) {
     event.stopPropagation();
     this.referenceImages.splice(index, 1);
+    this.saveState();
   }
 
   private applySourceAssets(sourceAssets: EnrichedSourceAsset[]): void {

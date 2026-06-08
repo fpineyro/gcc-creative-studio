@@ -391,7 +391,7 @@
           (clearReferenceVideo)="clearReferenceVideo($event)"
           (openAudioSelectorForReference)="openAudioSelectorForReference()"
           (clearReferenceAudio)="clearReferenceAudio($event)"
-          (toggleReferenceImagesType)="referenceImagesType = $event ? 'STYLE' : 'ASSET'"
+          (toggleReferenceImagesType)="referenceImagesType = $event ? 'STYLE' : 'ASSET'; saveState()"
         ></app-flow-prompt-box>
       </div>
 
