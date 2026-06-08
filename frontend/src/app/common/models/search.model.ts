@@ -144,3 +144,17 @@ export interface GalleryFiltersState {
   tags: string[];
   onlyMyMedia: boolean;
 }
+
+export interface ReferenceVideo {
+  id: number;
+  type: 'source_asset' | 'media_item';
+  previewUrl: string;
+  index?: number;
+}
+
+export interface ReferenceAudio {
+  id: number;
+  type: 'source_asset' | 'media_item';
+  name: string;
+  index?: number;
+}

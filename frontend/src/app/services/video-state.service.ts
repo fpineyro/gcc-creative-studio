@@ -18,6 +18,11 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
 
 import {SettingsService} from './settings.service';
+import {
+  ReferenceImage,
+  ReferenceVideo,
+  ReferenceAudio,
+} from '../common/models/search.model';
 
 interface VideoState {
   prompt: string;
@@ -34,6 +39,10 @@ interface VideoState {
   useBrandGuidelines: boolean;
   enhancePrompt: boolean;
   mode: string;
+  referenceImages: ReferenceImage[];
+  referenceImagesType: 'ASSET' | 'STYLE';
+  referenceVideo: ReferenceVideo | null;
+  referenceAudio: ReferenceAudio | null;
 }
 
 @Injectable({
@@ -62,6 +71,10 @@ export class VideoStateService {
       useBrandGuidelines: false,
       enhancePrompt: false,
       mode: 'Text to Video',
+      referenceImages: [],
+      referenceImagesType: 'ASSET',
+      referenceVideo: null,
+      referenceAudio: null,
     };
 
     this.state = new BehaviorSubject<VideoState>(this.initialState);

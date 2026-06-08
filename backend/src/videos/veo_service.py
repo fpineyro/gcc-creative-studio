@@ -888,13 +888,6 @@ def _process_video_in_background(
                         if raw_data_dict is not None:
                             update_data["raw_data"] = raw_data_dict
 
-                        if (
-                            request_dto.generation_model
-                            == GenerationModelEnum.GEMINI_OMNI
-                            and model_name_for_api
-                        ):
-                            update_data["model"] = model_name_for_api
-
                         await media_repo.update(media_item_id, update_data)
                         worker_logger.info(
                             "Successfully processed video job.",
